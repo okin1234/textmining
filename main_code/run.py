@@ -139,7 +139,7 @@ class NLP_classification():
         task_type=self.task_type
         
         '''data loading'''
-        train_dataset, val_dataset = make_dataset(csv_file=self.data_file, tokenizer=self.tokenizer, max_length=self.max_length, random_state=self.random_state, data_cut=100)
+        train_dataset, val_dataset = make_dataset(csv_file=self.data_file, tokenizer=self.tokenizer, max_length=self.max_length, random_state=self.random_state, data_cut=None)
     
         '''loader making'''
         train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=RandomSampler(train_dataset))
