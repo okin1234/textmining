@@ -58,12 +58,14 @@ def make_dataset(csv_file, tokenizer, max_length=512, random_state=1000, data_cu
 
         ''' dataset class 생성 '''
         class CustomDataset(torch.utils.data.Dataset):
-            def __init__(self, encodings, labels):
+            def __init__(self, encodings, labels, texts):
                 self.encodings = encodings
                 self.labels = labels
+                self.texts = texts
 
             def __getitem__(self, idx):
                 item = {key: val[idx] for key, val in self.encodings.items()}
+                item['text'] = self.texts[idx]
                 # scalar version
                 item['label'] = self.labels['label'][idx]
                 # one-hot version
@@ -74,7 +76,7 @@ def make_dataset(csv_file, tokenizer, max_length=512, random_state=1000, data_cu
                 return len(self.labels['label_onehot'])
 
         ''' train을 위한 format으로 data들 변환 '''
-        train_dataset = CustomDataset(train_encodings, train_labels)
-        val_dataset = CustomDataset(val_encodings, val_labels)
+        train_dataset = CustomDataset(train_encodings, train_labels, train_text)
+        val_dataset = CustomDataset(val_encodings, val_labels, val_text)
         
         return train_dataset, val_dataset

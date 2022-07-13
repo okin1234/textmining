@@ -75,7 +75,7 @@ def compute_metrics(output, target, task_type='onehot'):
     return [accuracy, precision, recall, f1]
 
 
-def model_eval(model, device, loader, task_type='onehot'):
+def model_eval(model, device, loader, task_type='onehot', return_values=False):
     model.eval()
     error = 0
     accuracy = 0
@@ -84,8 +84,10 @@ def model_eval(model, device, loader, task_type='onehot'):
     f1 = 0
     eval_targets=[]
     eval_outputs=[]
+    eval_texts=[]
     with torch.no_grad():
         for data in tqdm(loader):
+            eval_texts.extend(data['text'])
             input_ids=data['input_ids'].to(device, dtype=torch.long)
             mask = data['attention_mask'].to(device, dtype=torch.long)
             token_type_ids = data['token_type_ids'].to(device, dtype=torch.long)
@@ -107,7 +109,10 @@ def model_eval(model, device, loader, task_type='onehot'):
     error = error / len(loader)
     accuracy, precision, recall, f1 = compute_metrics(eval_outputs, eval_targets, task_type=task_type)
     
-    return error, accuracy, precision, recall, f1
+    if return_values:
+        return [error, accuracy, precision, recall, f1, eval_targets, eval_outputs, eval_texts]
+    else:
+        return [error, accuracy, precision, recall, f1]
 
 
 class EarlyStopping:
@@ -155,10 +160,13 @@ class EarlyStopping:
         
         
 def model_freeze(model, freeze_layers=None):
+    if freeze_layers == 0:
+        return model
+    
     if freeze_layers is not None:
         for param in model.pretrained_model.base_model.word_embedding.parameters():
             param.requires_grad = False
-        
+
         if freeze_layers != -1:
             # if freeze_layer_count == -1, we only freeze the embedding layer
             # otherwise we freeze the first `freeze_layer_count` encoder layers
